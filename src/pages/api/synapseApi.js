@@ -1,15 +1,13 @@
-import { parse } from 'url';
-import { query } from '../utils/db';
+import { query } from '../../utils/db';
 
 const handler = async (req, res) => {
   console.log('API handler called:', req.method, req.url);
   const { method } = req;
-  const { pathname } = parse(req.url, true);
 
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Action');
 
   // Handle OPTIONS request
   if (method === 'OPTIONS') {
@@ -19,25 +17,22 @@ const handler = async (req, res) => {
   try {
     switch (method) {
       case 'POST':
-        if (pathname === '/api/admin/login') {
-          await handleAdminLogin(req, res);
-        } else if (pathname === '/api/admin/verify-pin') {
+        // Check for PIN verification via header
+        const action = req.headers['x-action'];
+        if (action === 'verify-pin') {
           await handleVerifyPin(req, res);
         } else {
-          res.status(404).json({ error: 'Endpoint not found' });
+          // Default to admin login
+          await handleAdminLogin(req, res);
         }
         break;
       
       case 'GET':
-        if (pathname === '/api/test') {
-          await handleTestConnection(req, res);
-        } else {
-          res.status(404).json({ error: 'Endpoint not found' });
-        }
+        await handleTestConnection(req, res);
         break;
       
       default:
-        res.setHeader('Allow', ['POST', 'GET', 'PUT', 'DELETE']);
+        res.setHeader('Allow', ['POST', 'GET']);
         res.status(405).end(`Method ${method} Not Allowed`);
     }
   } catch (error) {
