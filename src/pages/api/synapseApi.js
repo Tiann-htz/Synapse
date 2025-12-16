@@ -1,5 +1,5 @@
 import { parse } from 'url';
-import { query } from './utils/db';
+import { query } from '../utils/db';
 
 const handler = async (req, res) => {
   console.log('API handler called:', req.method, req.url);
